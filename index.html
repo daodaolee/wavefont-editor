@@ -4,12 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>波形文本转换器</title>
+    <title>字体编辑器</title>
     <style>
         @font-face {
             font-family: wavefont;
             font-display: block;
             src: url(./Wavefont.woff2) format('woff2');
+        }
+        
+        @font-face {
+            font-family: linefont;
+            font-display: block;
+            src: url(./Linefont.woff2) format('woff2');
         }
 
         * {
@@ -23,31 +29,62 @@
             padding: 20px;
             background-color: #f5f5f5;
         }
-        h1{
+
+        h1 {
             text-align: center;
-            padding-bottom:30px
+            padding-bottom: 20px;
+            color: #333;
         }
 
-        .container {
+        .editors-container {
             display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
+            flex-direction: column;
+            gap: 40px;
             max-width: 1200px;
             margin: 0 auto;
         }
 
-        .input-section, .output-section {
-            flex: 1;
-            min-width: 300px;
+        .editor-section {
             background-color: white;
-            padding: 20px;
             border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
         }
 
-        h2 {
+        .editor-header {
+            border-bottom: 2px solid #eee;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        .editor-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .editor-description {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .editor-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .input-panel, .preview-panel {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
             margin-bottom: 15px;
             color: #333;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 8px;
         }
 
         textarea {
@@ -72,16 +109,27 @@
             margin-bottom: 15px;
         }
 
+        .control-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .control-column {
+            flex: 1;
+        }
+
         label {
             display: block;
             margin-bottom: 5px;
             font-weight: bold;
             color: #555;
+            font-size: 0.9rem;
         }
 
-        input[type="range"], input[type="color"], input[type="number"] {
+        input[type="range"], input[type="color"], input[type="number"], select {
             width: 100%;
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
 
         .output-preview {
@@ -91,14 +139,22 @@
             border-radius: 4px;
             min-height: 100px;
             word-wrap: break-word;
-            background-color: #0d8461;
             position: relative;
         }
-        .wavefont:before{
-            content:'';
+
+        .wave-preview {
+            background-color: #0d8461;
+        }
+
+        .linear-preview {
+            background-color: #333;
+        }
+
+        .wavefont:before {
+            content: '';
             position: absolute;
-            top:50%;
-            left:0;
+            top: 50%;
+            left: 0;
             translate: translateY(-50%);
             width: 100%;
             height: 1px;
@@ -111,129 +167,306 @@
             font-style: normal;
             font-optical-sizing: auto;
             position: relative;
-            outline: none; /* 移除编辑时的轮廓 */
-            /* 其他属性将通过JS设置 */
+            outline: none;
+        }
+
+        .linearfont {
+            font-family: linefont;
+            font-style: normal;
+            font-optical-sizing: auto;
+            position: relative;
+            outline: none;
         }
     </style>
 </head>
 
 <body>
-    <h1>文字转波形图</h1>
-    <div class="container">
-        <div class="input-section">
-            <h2>输入文本</h2>
-            <textarea id="inputText" placeholder="请输入要转换为波形的文本...">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiureprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</textarea>
+    <h1>字母字体编辑器</h1>
+    
+    <div class="editors-container">
+        <!-- 波形字体编辑器 -->
+        <section class="editor-section" id="wavefont-editor">
+            <div class="editor-header">
+                <h2 class="editor-title">波形字体编辑器</h2>
+                <p class="editor-description">通过控制波形参数调整字体显示效果</p>
+            </div>
             
-            <div class="control-panel">
-                <h2>属性设置</h2>
-                
-                <div class="control-group">
-                    <label for="fontSize">字体大小: <span id="fontSizeValue">30</span>px</label>
-                    <input type="range" id="fontSize" min="20" max="200" value="30">
+            <div class="editor-content">
+                <div class="input-panel">
+                    <h3 class="panel-title">输入文本</h3>
+                    <textarea id="waveInputText" placeholder="请输入要转换的文本...">lorem ipsum dolor sit amet, consectetur adipisicing elit.</textarea>
+                    
+                    <div class="control-panel">
+                        <h3 class="panel-title">波形字体属性设置</h3>
+                        
+                        <div class="control-row">
+                            <div class="control-column">
+                                <label for="waveFontSize">字体大小: <span id="waveFontSizeValue">30</span>px</label>
+                                <input type="range" id="waveFontSize" min="20" max="200" value="30">
+                            </div>
+                            
+                            <div class="control-column">
+                                <label for="waveLineHeight">行高: <span id="waveLineHeightValue">24</span>px</label>
+                                <input type="range" id="waveLineHeight" min="10" max="100" value="24">
+                            </div>
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-column">
+                                <label for="waveLetterSpacing">字间距: <span id="waveLetterSpacingValue">0.75</span>px</label>
+                                <input type="range" id="waveLetterSpacing" min="0" max="10" step="0.25" value="0.75">
+                            </div>
+                            
+                            <div class="control-column">
+                                <label for="waveFontColor">字体颜色:</label>
+                                <input type="color" id="waveFontColor" value="#ffffff">
+                            </div>
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-column">
+                                <label for="waveFontWeight">字重(wght): <span id="waveFontWeightValue">125</span></label>
+                                <input type="range" id="waveFontWeight" min="1" max="1000" value="125">
+                            </div>
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-column">
+                                <label for="waveRond">圆度(ROND): <span id="waveRondValue">0</span></label>
+                                <input type="range" id="waveRond" min="0" max="100" value="0">
+                            </div>
+                            
+                            <div class="control-column">
+                                <label for="waveYela">Y轴拉伸(YELA): <span id="waveYelaValue">0</span></label>
+                                <input type="range" id="waveYela" min="0" max="100" value="0">
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
-                <div class="control-group">
-                    <label for="fontColor">字体颜色:</label>
-                    <input type="color" id="fontColor" value="#ffffff">
-                </div>
-                
-                <div class="control-group">
-                    <label for="lineHeight">行高: <span id="lineHeightValue">24</span>px</label>
-                    <input type="range" id="lineHeight" min="10" max="100" value="24">
-                </div>
-                
-                <div class="control-group">
-                    <label for="letterSpacing">字间距: <span id="letterSpacingValue">0.75</span>px</label>
-                    <input type="range" id="letterSpacing" min="0" max="10" step="0.25" value="0.75">
-                </div>
-                
-                <div class="control-group">
-                    <label for="fontWeight">字重(wght): <span id="fontWeightValue">125</span></label>
-                    <input type="range" id="fontWeight" min="1" max="1000" value="125">
-                </div>
-                
-                <div class="control-group">
-                    <label for="rond">圆度(ROND): <span id="rondValue">0</span></label>
-                    <input type="range" id="rond" min="0" max="100" value="0">
-                </div>
-                
-                <div class="control-group">
-                    <label for="yela">Y轴拉伸(YELA): <span id="yelaValue">0</span></label>
-                    <input type="range" id="yela" min="0" max="100" value="0">
+                <div class="preview-panel">
+                    <h3 class="panel-title">波形预览</h3>
+                    <div class="output-preview wave-preview">
+                        <div id="waveOutput" class="wavefont" contenteditable="true">every dream needs fuel to come alive</div>
+                    </div>
                 </div>
             </div>
-        </div>
+        </section>
         
-        <div class="output-section">
-            <h2>波形图预览</h2>
-            <div class="output-preview">
-                <div id="wavefontOutput" class="wavefont" contenteditable="true">every dream needs fuel to come alive</div>
+        <!-- 线性字体编辑器 -->
+        <section class="editor-section" id="linearfont-editor">
+            <div class="editor-header">
+                <h2 class="editor-title">线性字体编辑器</h2>
+                <p class="editor-description">通过调整线性参数定制字体显示效果</p>
             </div>
-        </div>
+            
+            <div class="editor-content">
+                <div class="input-panel">
+                    <h3 class="panel-title">输入文本</h3>
+                    <textarea id="linearInputText" placeholder="请输入要转换的文本...">Loremipsumdolorsitametconsecteturadipisicingelit</textarea>
+                    
+                    <div class="control-panel">
+                        <h3 class="panel-title">线性字体属性设置</h3>
+                        
+                        <div class="control-row">
+                            <div class="control-column">
+                                <label for="linearFontSize">字体大小: <span id="linearFontSizeValue">80</span>px</label>
+                                <input type="range" id="linearFontSize" min="20" max="200" value="80">
+                            </div>
+                            
+                            <div class="control-column">
+                                <label for="linearLineHeight">行高: <span id="linearLineHeightValue">24</span>px</label>
+                                <input type="range" id="linearLineHeight" min="10" max="100" value="24">
+                            </div>
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-column">
+                                <label for="linearLetterSpacing">字间距: <span id="linearLetterSpacingValue">0.75</span>px</label>
+                                <input type="range" id="linearLetterSpacing" min="0" max="10" step="0.25" value="0.75">
+                            </div>
+                            
+                            <div class="control-column">
+                                <label for="linearFontColor">字体颜色:</label>
+                                <input type="color" id="linearFontColor" value="#ffffff">
+                            </div>
+                        </div>
+                        
+                        <div class="control-row">
+                            <div class="control-column">
+                                <label for="linearFontWeight">字重(wght): <span id="linearFontWeightValue">100</span></label>
+                                <input type="range" id="linearFontWeight" min="100" max="900" step="100" value="100">
+                            </div>
+                            
+                            <div class="control-column">
+                                <label for="linearTextAlign">文本对齐:</label>
+                                <select id="linearTextAlign">
+                                    <option value="left">左对齐</option>
+                                    <option value="center">居中</option>
+                                    <option value="right">右对齐</option>
+                                    <option value="justify">两端对齐</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+
+                        
+                        <div class="control-row">
+                            <div class="control-column">
+                                <label for="linearTextTransform">文本转换:</label>
+                                <select id="linearTextTransform">
+                                    <option value="none">无转换</option>
+                                    <option value="uppercase">大写</option>
+                                    <option value="lowercase">小写</option>
+                                    <option value="capitalize">首字母大写</option>
+                                </select>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="preview-panel">
+                    <h3 class="panel-title">线性预览</h3>
+                    <div class="output-preview linear-preview">
+                        <div id="linearOutput" class="linearfont" contenteditable="true">every dream needs fuel to come alive</div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </div>
 
     <script>
-        // 获取DOM元素
-        const inputText = document.getElementById('inputText');
-        const wavefontOutput = document.getElementById('wavefontOutput');
-        const fontSize = document.getElementById('fontSize');
-        const fontSizeValue = document.getElementById('fontSizeValue');
-        const fontColor = document.getElementById('fontColor');
-        const lineHeight = document.getElementById('lineHeight');
-        const lineHeightValue = document.getElementById('lineHeightValue');
-        const letterSpacing = document.getElementById('letterSpacing');
-        const letterSpacingValue = document.getElementById('letterSpacingValue');
-        const fontWeight = document.getElementById('fontWeight');
-        const fontWeightValue = document.getElementById('fontWeightValue');
-        const rond = document.getElementById('rond');
-        const rondValue = document.getElementById('rondValue');
-        const yela = document.getElementById('yela');
-        const yelaValue = document.getElementById('yelaValue');
+        // 波形字体功能
+        (function() {
+            // 获取波形字体DOM元素
+            const waveInputText = document.getElementById('waveInputText');
+            const waveOutput = document.getElementById('waveOutput');
+            const waveFontSize = document.getElementById('waveFontSize');
+            const waveFontSizeValue = document.getElementById('waveFontSizeValue');
+            const waveFontColor = document.getElementById('waveFontColor');
+            const waveLineHeight = document.getElementById('waveLineHeight');
+            const waveLineHeightValue = document.getElementById('waveLineHeightValue');
+            const waveLetterSpacing = document.getElementById('waveLetterSpacing');
+            const waveLetterSpacingValue = document.getElementById('waveLetterSpacingValue');
+            const waveFontWeight = document.getElementById('waveFontWeight');
+            const waveFontWeightValue = document.getElementById('waveFontWeightValue');
+            const waveRond = document.getElementById('waveRond');
+            const waveRondValue = document.getElementById('waveRondValue');
+            const waveYela = document.getElementById('waveYela');
+            const waveYelaValue = document.getElementById('waveYelaValue');
 
-        // 更新波形图
-        function updateWavefont() {
-            // 更新样式
-            wavefontOutput.style.fontSize = `${fontSize.value}px`;
-            wavefontOutput.style.color = fontColor.value;
-            wavefontOutput.style.lineHeight = `${lineHeight.value}px`;
-            wavefontOutput.style.letterSpacing = `${letterSpacing.value}px`;
-            wavefontOutput.style.fontVariationSettings = 
-                `"wght" ${fontWeight.value}, "ROND" ${rond.value}, "YELA" ${yela.value}`;
+            // 更新波形字体
+            function updateWavefont() {
+                // 更新样式
+                waveOutput.style.fontSize = `${waveFontSize.value}px`;
+                waveOutput.style.color = waveFontColor.value;
+                waveOutput.style.lineHeight = `${waveLineHeight.value}px`;
+                waveOutput.style.letterSpacing = `${waveLetterSpacing.value}px`;
+                waveOutput.style.fontVariationSettings =
+                    `"wght" ${waveFontWeight.value}, "ROND" ${waveRond.value}, "YELA" ${waveYela.value}`;
+
+                // 更新显示的值
+                waveFontSizeValue.textContent = waveFontSize.value;
+                waveLineHeightValue.textContent = waveLineHeight.value;
+                waveLetterSpacingValue.textContent = waveLetterSpacing.value;
+                waveFontWeightValue.textContent = waveFontWeight.value;
+                waveRondValue.textContent = waveRond.value;
+                waveYelaValue.textContent = waveYela.value;
+            }
+
+            // 左侧输入框更新右侧预览
+            function syncWaveText() {
+                waveOutput.textContent = waveInputText.value;
+            }
+
+            // 右侧预览更新左侧输入框
+            function syncFromWaveOutput() {
+                waveInputText.value = waveOutput.textContent;
+            }
+
+            // 添加事件监听器
+            waveInputText.addEventListener('input', syncWaveText);
+            waveOutput.addEventListener('input', syncFromWaveOutput);
             
-            // 更新显示的值
-            fontSizeValue.textContent = fontSize.value;
-            lineHeightValue.textContent = lineHeight.value;
-            letterSpacingValue.textContent = letterSpacing.value;
-            fontWeightValue.textContent = fontWeight.value;
-            rondValue.textContent = rond.value;
-            yelaValue.textContent = yela.value;
-        }
+            // 波形字体控制器事件
+            waveFontSize.addEventListener('input', updateWavefont);
+            waveFontColor.addEventListener('input', updateWavefont);
+            waveLineHeight.addEventListener('input', updateWavefont);
+            waveLetterSpacing.addEventListener('input', updateWavefont);
+            waveFontWeight.addEventListener('input', updateWavefont);
+            waveRond.addEventListener('input', updateWavefont);
+            waveYela.addEventListener('input', updateWavefont);
 
-        // 左侧输入框更新右侧预览
-        function syncToPreview() {
-            wavefontOutput.textContent = inputText.value;
-        }
+            // 初始化
+            syncWaveText();
+            updateWavefont();
+        })();
 
-        // 右侧预览更新左侧输入框
-        function syncToInput() {
-            inputText.value = wavefontOutput.textContent;
-        }
+        // 线性字体功能
+        (function() {
+            // 获取线性字体DOM元素
+            const linearInputText = document.getElementById('linearInputText');
+            const linearOutput = document.getElementById('linearOutput');
+            const linearFontSize = document.getElementById('linearFontSize');
+            const linearFontSizeValue = document.getElementById('linearFontSizeValue');
+            const linearFontColor = document.getElementById('linearFontColor');
+            const linearLineHeight = document.getElementById('linearLineHeight');
+            const linearLineHeightValue = document.getElementById('linearLineHeightValue');
+            const linearLetterSpacing = document.getElementById('linearLetterSpacing');
+            const linearLetterSpacingValue = document.getElementById('linearLetterSpacingValue');
+            const linearFontWeight = document.getElementById('linearFontWeight');
+            const linearFontWeightValue = document.getElementById('linearFontWeightValue');
+            const linearTextAlign = document.getElementById('linearTextAlign');
+            const linearTextTransform = document.getElementById('linearTextTransform');
 
-        // 添加事件监听器
-        inputText.addEventListener('input', syncToPreview);
-        wavefontOutput.addEventListener('input', syncToInput);
-        
-        fontSize.addEventListener('input', updateWavefont);
-        fontColor.addEventListener('input', updateWavefont);
-        lineHeight.addEventListener('input', updateWavefont);
-        letterSpacing.addEventListener('input', updateWavefont);
-        fontWeight.addEventListener('input', updateWavefont);
-        rond.addEventListener('input', updateWavefont);
-        yela.addEventListener('input', updateWavefont);
+            // 更新线性字体
+            function updateLinearfont() {
+                // 更新样式
+                linearOutput.style.fontSize = `${linearFontSize.value}px`;
+                linearOutput.style.color = linearFontColor.value;
+                linearOutput.style.lineHeight = `${linearLineHeight.value}px`;
+                linearOutput.style.letterSpacing = `${linearLetterSpacing.value}px`;
+                linearOutput.style.fontVariationSettings =
+                    `"wght" ${linearFontWeight.value}`;
+                linearOutput.style.textAlign = linearTextAlign.value;
+                linearOutput.style.textTransform = linearTextTransform.value;
 
-        // 初始化
-        syncToPreview();
-        updateWavefont();
+                // 更新显示的值
+                linearFontSizeValue.textContent = linearFontSize.value;
+                linearLineHeightValue.textContent = linearLineHeight.value;
+                linearLetterSpacingValue.textContent = linearLetterSpacing.value;
+                linearFontWeightValue.textContent = linearFontWeight.value;
+            }
+
+            // 左侧输入框更新右侧预览
+            function syncLinearText() {
+                linearOutput.textContent = linearInputText.value;
+            }
+
+            // 右侧预览更新左侧输入框
+            function syncFromLinearOutput() {
+                linearInputText.value = linearOutput.textContent;
+            }
+
+            // 添加事件监听器
+            linearInputText.addEventListener('input', syncLinearText);
+            linearOutput.addEventListener('input', syncFromLinearOutput);
+            
+            // 线性字体控制器事件
+            linearFontSize.addEventListener('input', updateLinearfont);
+            linearFontColor.addEventListener('input', updateLinearfont);
+            linearLineHeight.addEventListener('input', updateLinearfont);
+            linearLetterSpacing.addEventListener('input', updateLinearfont);
+            linearFontWeight.addEventListener('input', updateLinearfont);
+            linearTextAlign.addEventListener('change', updateLinearfont);
+            linearTextTransform.addEventListener('change', updateLinearfont);
+
+            // 初始化
+            syncLinearText();
+            updateLinearfont();
+        })();
     </script>
 </body>
+
 </html>
