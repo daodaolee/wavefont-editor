@@ -1,2 +1,2 @@
 # wavefont-editor
-# wavefont-editor
+font to wave editor
