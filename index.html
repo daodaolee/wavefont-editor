@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>波形文本转换器</title>
+    <style>
+        @font-face {
+            font-family: wavefont;
+            font-display: block;
+            src: url(./Wavefont.woff2) format('woff2');
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        h1{
+            text-align: center;
+            padding-bottom:30px
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .input-section, .output-section {
+            flex: 1;
+            min-width: 300px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            resize: vertical;
+        }
+
+        .control-panel {
+            background-color: #f9f9f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        input[type="range"], input[type="color"], input[type="number"] {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .output-preview {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px dashed #ddd;
+            border-radius: 4px;
+            min-height: 100px;
+            word-wrap: break-word;
+            background-color: #0d8461;
+            position: relative;
+        }
+        .wavefont:before{
+            content:'';
+            position: absolute;
+            top:50%;
+            left:0;
+            translate: translateY(-50%);
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.5);
+            z-index: 1;
+        }
+
+        .wavefont {
+            font-family: wavefont;
+            font-style: normal;
+            font-optical-sizing: auto;
+            position: relative;
+            outline: none; /* 移除编辑时的轮廓 */
+            /* 其他属性将通过JS设置 */
+        }
+    </style>
+</head>
+
+<body>
+    <h1>文字转波形图</h1>
+    <div class="container">
+        <div class="input-section">
+            <h2>输入文本</h2>
+            <textarea id="inputText" placeholder="请输入要转换为波形的文本...">every dream needs fuel to come alive</textarea>
+            
+            <div class="control-panel">
+                <h2>属性设置</h2>
+                
+                <div class="control-group">
+                    <label for="fontSize">字体大小: <span id="fontSizeValue">30</span>px</label>
+                    <input type="range" id="fontSize" min="20" max="200" value="30">
+                </div>
+                
+                <div class="control-group">
+                    <label for="fontColor">字体颜色:</label>
+                    <input type="color" id="fontColor" value="#ffffff">
+                </div>
+                
+                <div class="control-group">
+                    <label for="lineHeight">行高: <span id="lineHeightValue">24</span>px</label>
+                    <input type="range" id="lineHeight" min="10" max="100" value="24">
+                </div>
+                
+                <div class="control-group">
+                    <label for="letterSpacing">字间距: <span id="letterSpacingValue">0.75</span>px</label>
+                    <input type="range" id="letterSpacing" min="0" max="10" step="0.25" value="0.75">
+                </div>
+                
+                <div class="control-group">
+                    <label for="fontWeight">字重(wght): <span id="fontWeightValue">125</span></label>
+                    <input type="range" id="fontWeight" min="1" max="1000" value="125">
+                </div>
+                
+                <div class="control-group">
+                    <label for="rond">圆度(ROND): <span id="rondValue">0</span></label>
+                    <input type="range" id="rond" min="0" max="100" value="0">
+                </div>
+                
+                <div class="control-group">
+                    <label for="yela">Y轴拉伸(YELA): <span id="yelaValue">0</span></label>
+                    <input type="range" id="yela" min="0" max="100" value="0">
+                </div>
+            </div>
+        </div>
+        
+        <div class="output-section">
+            <h2>波形图预览</h2>
+            <div class="output-preview">
+                <div id="wavefontOutput" class="wavefont" contenteditable="true">every dream needs fuel to come alive</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 获取DOM元素
+        const inputText = document.getElementById('inputText');
+        const wavefontOutput = document.getElementById('wavefontOutput');
+        const fontSize = document.getElementById('fontSize');
+        const fontSizeValue = document.getElementById('fontSizeValue');
+        const fontColor = document.getElementById('fontColor');
+        const lineHeight = document.getElementById('lineHeight');
+        const lineHeightValue = document.getElementById('lineHeightValue');
+        const letterSpacing = document.getElementById('letterSpacing');
+        const letterSpacingValue = document.getElementById('letterSpacingValue');
+        const fontWeight = document.getElementById('fontWeight');
+        const fontWeightValue = document.getElementById('fontWeightValue');
+        const rond = document.getElementById('rond');
+        const rondValue = document.getElementById('rondValue');
+        const yela = document.getElementById('yela');
+        const yelaValue = document.getElementById('yelaValue');
+
+        // 更新波形图
+        function updateWavefont() {
+            // 更新样式
+            wavefontOutput.style.fontSize = `${fontSize.value}px`;
+            wavefontOutput.style.color = fontColor.value;
+            wavefontOutput.style.lineHeight = `${lineHeight.value}px`;
+            wavefontOutput.style.letterSpacing = `${letterSpacing.value}px`;
+            wavefontOutput.style.fontVariationSettings = 
+                `"wght" ${fontWeight.value}, "ROND" ${rond.value}, "YELA" ${yela.value}`;
+            
+            // 更新显示的值
+            fontSizeValue.textContent = fontSize.value;
+            lineHeightValue.textContent = lineHeight.value;
+            letterSpacingValue.textContent = letterSpacing.value;
+            fontWeightValue.textContent = fontWeight.value;
+            rondValue.textContent = rond.value;
+            yelaValue.textContent = yela.value;
+        }
+
+        // 左侧输入框更新右侧预览
+        function syncToPreview() {
+            wavefontOutput.textContent = inputText.value;
+        }
+
+        // 右侧预览更新左侧输入框
+        function syncToInput() {
+            inputText.value = wavefontOutput.textContent;
+        }
+
+        // 添加事件监听器
+        inputText.addEventListener('input', syncToPreview);
+        wavefontOutput.addEventListener('input', syncToInput);
+        
+        fontSize.addEventListener('input', updateWavefont);
+        fontColor.addEventListener('input', updateWavefont);
+        lineHeight.addEventListener('input', updateWavefont);
+        letterSpacing.addEventListener('input', updateWavefont);
+        fontWeight.addEventListener('input', updateWavefont);
+        rond.addEventListener('input', updateWavefont);
+        yela.addEventListener('input', updateWavefont);
+
+        // 初始化
+        syncToPreview();
+        updateWavefont();
+    </script>
+</body>
+</html>
